@@ -1,0 +1,47 @@
+version: '3.7'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: DockerFile
+    depends_on:
+      - mysql
+    volumes:
+      - ./:/go/src/postMessage
+    ports:
+      - "8083:8083"
+
+  mysql:
+    container_name: mysql
+    build:
+      context: ./mysql
+      dockerfile: DockerFile
+    volumes:
+      - "./mysql:/var/lib/mysql"
+    ports:
+    - 127.0.0.1:3333:3306
+    environment:
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: ryohei1009
+      MYSQL_DATABASE: postMessage
+    # docker-compose run実行時に実行される
+    # オプションは日本語文の字化けに対するおまじない
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci --skip-character-set-client-handshake
+    # パスをボリュームとしてマウント
+    # :の左側がホストディレクトリ、:の右側がコンテナ上のディレクトリ
+    volumes:
+      # 初期設定を読み込む
+      - "./docker/mysql/my.conf:/etc/mysql/my.conf"
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin:latest
+    environment:
+      PMA_USER: root
+      PMA_PASSWORD: ryohei1009
+    ports:
+      - 8080:80
+    links:
+      - mysql:db
+    volumes:
+      - /sessions
